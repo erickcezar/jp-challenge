@@ -1,0 +1,48 @@
+Docker
+
+Changes made:
+
+- setup.py - orders
+  change version -> alembic==1.9.3
+  add -> importlib-metadata==4.13.0
+
+- setup.py - products
+  add -> importlib-metadata==4.13.0
+
+- setup.py - gateway
+  add -> importlib-metadata==4.13.0
+
+Due the following errors: 
+
+https://discourse.jupyter.org/t/importerror-cannot-import-name-bindparamclause-from-sqlalchemy-sql-expression/17938
+https://stackoverflow.com/questions/73929564/entrypoints-object-has-no-attribute-get-digital-ocean
+
+Reasons to add/update dependencies in setup.py file:
+
+The conda installed different packages and specific versions for the application to work locally. But when I tried to deploy using docker, the errors occurred according to the links provided. So I decided to use the versions in the environment_dev.yml file, which worked in docker.
+
+K8s
+
+- Adding bitname chart repo
+  -> the stable repository was deprecated so I used bitnami's to get the same services.
+  
+- Change secret ref in orders app due bitnami postgres change the password key ref:
+
+From:
+
+            valueFrom:
+              secretKeyRef:
+                name: db-postgresql
+                key: postgresql-password
+
+To: 
+
+            valueFrom:
+              secretKeyRef:
+                name: db-postgresql
+                key: postgres-password
+
+- Add orders database on the new helm chart:
+
+	helm upgrade db bitnami/postgresql --install \
+		--set global.postgresql.auth.database=orders
