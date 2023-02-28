@@ -12,7 +12,7 @@ Changes made:
 - setup.py - gateway
   add -> importlib-metadata==4.13.0
 
-Due the following errors: 
+Due the following errors:
 
 https://discourse.jupyter.org/t/importerror-cannot-import-name-bindparamclause-from-sqlalchemy-sql-expression/17938
 https://stackoverflow.com/questions/73929564/entrypoints-object-has-no-attribute-get-digital-ocean
@@ -25,7 +25,7 @@ K8s
 
 - Adding bitname chart repo
   -> the stable repository was deprecated so I used bitnami's to get the same services.
-  
+
 - Change secret ref in orders app due bitnami postgres change the password key ref:
 
 From:
@@ -35,7 +35,7 @@ From:
                 name: db-postgresql
                 key: postgresql-password
 
-To: 
+To:
 
             valueFrom:
               secretKeyRef:
@@ -46,3 +46,42 @@ To:
 
 	helm upgrade db bitnami/postgresql --install \
 		--set global.postgresql.auth.database=orders
+
+
+--------------------------------------------------------------------
+
+
+Epinio:
+
+To deploy the application, I used the method with container image.
+For this I created a local repository via docker:
+
+container run -d --name registry.localhost -v local_registry:/var/lib/registry --restart always -p 5000:5000 registry:2
+
+I created a cluster using k3d using to the local repository:
+
+k3d cluster create epinio --registry-config "/home/erick/k3d-registries.yaml"
+
+k3d-registries.yaml:
+
+mirrors:
+  "registry.localhost:5000":
+    endpoint:
+      - http://registry.localhost:5000
+
+
+docker network connect k3d-epinio registry.localhost
+
+After that, the images that were pushed to the local registry will become available to Epinio.
+
+Since the container images were already built locally, due to the previous steps, I just pushed them into the local registry, like this:
+
+docker tag nameko/nameko-example-products:dev registry.localhost:5000/products:latest
+docker push registry.localhost:5000/products:latest
+
+To upload the application, I used the GUI to get to know the tool, but you can also use: epinio push --name Products --container-image-url registry.localhost:5000/products:latest
+By adding -env, I added variables reference to database host, rabbitmq host, passwords.
+
+
+
+
